@@ -1,0 +1,6 @@
+{
+  "name": "HMS - Home Maintenance System",
+  "description": "HMS - Home Maintenance System: All Civil works and home services in one place. 3D Crystal Water UI for booking verified contractors, masons, electricians, and plumbers with worker portfolio page builder.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
