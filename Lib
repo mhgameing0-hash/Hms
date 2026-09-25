@@ -1,0 +1,1617 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+// ============================================================================
+// HMS - Home Maintenance System (ØªÙ…Ø§Ù… Ø³ÙˆÙ„ Ø§ÙˆØ± ÛÙˆÙ… Ø³Ø±ÙˆØ³Ø²)
+// Production Release v1.0.0 for Google Play Store (.aab / .apk)
+// Single-file Complete Production Code
+// ============================================================================
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBristatusBarIconBrightnessghtness: Brightness.light,
+      systemNavigationBarColor: Color(0xFF070A11),
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
+  runApp(const HMSHomeApp());
+}
+
+class HMSHomeApp extends StatelessWidget {
+  const HMSHomeApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'HMS - Home Maintenance Services',
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF070A11),
+        primaryColor: const Color(0xFF00E5FF),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF00E5FF),
+          secondary: Color(0xFF0055FF),
+          surface: Color(0xFF0E1524),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF0B101C),
+          elevation: 0,
+        ),
+      ),
+      home: const HMSDashboardScreen(),
+    );
+  }
+}
+
+// ----------------------------------------------------------------------------
+// DATA MODELS
+// ----------------------------------------------------------------------------
+class HMSService {
+  final String id;
+  final String titleUrdu;
+  final String titleEng;
+  final String titleArabic;
+  final IconData icon;
+  final Color accentColor;
+  final String category;
+  final String categoryUrdu;
+  final String typicalRate;
+  final String rateUnit;
+  final String descriptionUrdu;
+  final List<String> commonTasks;
+
+  const HMSService({
+    required this.id,
+    required this.titleUrdu,
+    required this.titleEng,
+    required this.titleArabic,
+    required this.icon,
+    required this.accentColor,
+    required this.category,
+    required this.categoryUrdu,
+    required this.typicalRate,
+    required this.rateUnit,
+    required this.descriptionUrdu,
+    required this.commonTasks,
+  });
+}
+
+class WorkerProfile {
+  final String id;
+  final String name;
+  final String serviceId;
+  final String phone;
+  final String whatsapp;
+  final int experienceYears;
+  final String rateText;
+  final String city;
+  final String area;
+  final double rating;
+  final int jobsCompleted;
+  final bool cnicVerified;
+  final String bio;
+  final String badgeLevel;
+
+  WorkerProfile({
+    required this.id,
+    required this.name,
+    required this.serviceId,
+    required this.phone,
+    required this.whatsapp,
+    required this.experienceYears,
+    required this.rateText,
+    required this.city,
+    required this.area,
+    required this.rating,
+    required this.jobsCompleted,
+    required this.cnicVerified,
+    required this.bio,
+    this.badgeLevel = 'Verified Pro',
+  });
+}
+
+class BookingOrder {
+  final String serviceTitle;
+  final String workerName;
+  final String customerName;
+  final String phone;
+  final String city;
+  final String address;
+  final String urgency;
+  final String notes;
+
+  BookingOrder({
+    required this.serviceTitle,
+    required this.workerName,
+    required this.customerName,
+    required this.phone,
+    required this.city,
+    required this.address,
+    required this.urgency,
+    required this.notes,
+  });
+}
+
+// ----------------------------------------------------------------------------
+// PRE-DEFINED CIVIL & HOME MAINTENANCE SERVICES (13 CATEGORIES)
+// ----------------------------------------------------------------------------
+final List<HMSService> kHmsServices = [
+  const HMSService(
+    id: 'contractor',
+    titleUrdu: 'Ù¹Ú¾ÛŒÚ©ÛŒØ¯Ø§Ø±',
+    titleEng: 'Contractor',
+    titleArabic: 'Ø§Ù„Ù…Ù‚Ø§ÙˆÙ„ Ø§Ù„Ø¹Ø§Ù…',
+    icon: Icons.apartment_rounded,
+    accentColor: Color(0xFFFFD54F),
+    category: 'Management',
+    categoryUrdu: 'Ø§Ù†ØªØ¸Ø§Ù…ÛŒÛ Ø§ÙˆØ± Ù¹Ú¾ÛŒÚ©Û',
+    typicalRate: 'Rs. 2,400 - 3,500',
+    rateUnit: 'ÙÛŒ Ù…Ø±Ø¨Ø¹ ÙÙ¹ (Per Sq.ft)',
+    descriptionUrdu: 'Ù…Ú©Ù…Ù„ Ú¯Ú¾Ø± Ú©ÛŒ ØªØ¹Ù…ÛŒØ±ØŒ Ú¯Ø±Û’ Ø³Ù¹Ø±Ú©Ú†Ø± Ø§ÙˆØ± Ú©Ù†Ù¹Ø±ÛŒÚ©Ù¹ Ù…Ø§Ù†ÛŒÙ¹Ø±Ù†Ú¯ Ú©ÛŒ Ù¾ÛŒØ´Û ÙˆØ±Ø§Ù†Û Ø®Ø¯Ù…Ø§Øª',
+    commonTasks: ['Ú¯Ø±Û’ Ø³Ù¹Ø±Ú©Ú†Ø± ØªØ¹Ù…ÛŒØ±', 'Ù…Ú©Ù…Ù„ ÙÙ†Ø´Ù†Ú¯ Ù¹Ú¾ÛŒÚ©Û', 'Ù„ÛŒØ¨Ø± Ø³Ù¾Ø±ÙˆØ§Ø¦Ø²Ù†', 'ÙØ§Ø¤Ù†ÚˆÛŒØ´Ù† ÙˆØ±Ú©'],
+  ),
+  const HMSService(
+    id: 'civil_engineer',
+    titleUrdu: 'Ø³ÙˆÙ„ Ø§Ù†Ø¬ÛŒÙ†Ø¦Ø±',
+    titleEng: 'Civil Engineer',
+    titleArabic: 'Ù…Ù‡Ù†Ø¯Ø³ Ù…Ø¯Ù†ÙŠ',
+    icon: Icons.engineering_rounded,
+    accentColor: Color(0xFF00E5FF),
+    category: 'Engineering',
+    categoryUrdu: 'Ø§Ù†Ø¬ÛŒÙ†Ø¦Ø±Ù†Ú¯ Ùˆ Ù…Ø¹Ø§Ø¦Ù†Û',
+    typicalRate: 'Rs. 5,000 - 15,000',
+    rateUnit: 'ÙÛŒ ÙˆØ²Ù¹ / BOQ Ø±Ù¾ÙˆØ±Ù¹',
+    descriptionUrdu: 'Ø³Ù¹Ø±Ú©Ú†Ø±Ù„ ÚˆÛŒØ²Ø§Ø¦Ù†ØŒ ÙØ§Ø¤Ù†ÚˆÛŒØ´Ù† Ù…Ø¹Ø§Ø¦Ù†ÛØŒ Ù…ÛŒÙ¹Ø±ÛŒÙ„ Ù¹ÛŒØ³Ù¹Ù†Ú¯ Ø§ÙˆØ± Ù†Ù‚Ø´Û ØªØµØ¯ÛŒÙ‚',
+    commonTasks: ['Ø³Ù¹Ø±Ú©Ú†Ø± Ù„ÙˆÚˆ Ú©ÛŒÙ„Ú©ÙˆÙ„ÛŒØ´Ù†', 'Ù…ÛŒÙ¹Ø±ÛŒÙ„ Ú©ÙˆØ§Ù„Ù¹ÛŒ Ù¹ÛŒØ³Ù¹', 'BOQ Ù„Ø§Ú¯Øª Ú©ÛŒ Ø±Ù¾ÙˆØ±Ù¹', 'Ú©Ø±ÛŒÚ©Ø³ ØªØ´Ø®ÛŒØµ'],
+  ),
+  const HMSService(
+    id: 'architect',
+    titleUrdu: 'Ø¢Ø±Ú©ÛŒÙ¹ÛŒÚ©Ù¹',
+    titleEng: 'Architect Design',
+    titleArabic: 'Ù…Ù‡Ù†Ø¯Ø³ Ù…Ø¹Ù…Ø§Ø±ÙŠ',
+    icon: Icons.architecture_rounded,
+    accentColor: Color(0xFFFF4081),
+    category: 'Design',
+    categoryUrdu: 'Ù†Ù‚Ø´Û Ø§ÙˆØ± 3D Ù…Ø§ÚˆÙ„Ù†Ú¯',
+    typicalRate: 'Rs. 25,000 - 80,000',
+    rateUnit: 'ÙÛŒ ÛØ§Ø¤Ø³ Ù¾Ù„Ø§Ù†',
+    descriptionUrdu: 'Ø¬Ø¯ÛŒØ¯ 2D/3D ÛØ§Ø¤Ø³ Ù¾Ù„Ø§Ù†Ù†Ú¯ØŒ Ø§ÛŒÙ„ÛŒÙˆÛŒØ´Ù†ØŒ Ú©ÛŒÚˆ ÚˆØ±Ø§Ø¦Ù†Ú¯ Ø§ÙˆØ± Ù…ÛŒÙ¾ Ø§Ù¾Ø±ÙˆÙˆÙ„',
+    commonTasks: ['2D ÙÙ„ÙˆØ± Ù…ÛŒÙ¾ Ù¾Ù„Ø§Ù†Ù†Ú¯', '3D ÙØ±Ù†Ù¹ Ø§ÛŒÙ„ÛŒÙˆÛŒØ´Ù†', 'LDA / CDA Ù…ÛŒÙ¾ Ù…Ù†Ø¸ÙˆØ±ÛŒ', 'Ø§Ø³Ù¾ÛŒØ³ Ù¾Ù„Ø§Ù†Ù†Ú¯'],
+  ),
+  const HMSService(
+    id: 'mason',
+    titleUrdu: 'Ø±Ø§Ø¬ Ù…Ø³ØªØ±ÛŒ',
+    titleEng: 'Mason / Builder',
+    titleArabic: 'Ø¨ÙŽÙ†Ù‘Ø§Ø¡ ÙˆÙ…Ø³Ø§Ø­',
+    icon: Icons.foundation_rounded,
+    accentColor: Color(0xFFFF9100),
+    category: 'Civil Work',
+    categoryUrdu: 'Ú†Ù†Ø§Ø¦ÛŒ Ø§ÙˆØ± Ù¾Ù„Ø§Ø³Ù¹Ø±',
+    typicalRate: 'Rs. 2,200 - 2,800',
+    rateUnit: 'Ø±ÙˆØ²Ø§Ù†Û Ø¯ÛŒÛØ§Ú‘ÛŒ (Daily)',
+    descriptionUrdu: 'Ø§ÛŒÙ†Ù¹ÙˆÚº Ú©ÛŒ Ù¾Ú©ÛŒ Ú†Ù†Ø§Ø¦ÛŒØŒ Ø³ÛŒÙ…Ù†Ù¹ Ù¾Ù„Ø§Ø³Ù¹Ø±ØŒ ÙØ§Ø¤Ù†ÚˆÛŒØ´Ù† Ú©Ù¹Ø§Ø¦ÛŒ Ø§ÙˆØ± Ù„ÛŒÙ†Ù¹Ø± ÚˆØ§Ù„Ù†Ø§',
+    commonTasks: ['Ø§ÛŒÙ†Ù¹ÙˆÚº Ú©ÛŒ Ú†Ù†Ø§Ø¦ÛŒ', 'Ø³ÛŒÙ…Ù†Ù¹ Ø±ÛŒØª Ù¾Ù„Ø§Ø³Ù¹Ø±', 'Ù„ÛŒÙ†Ù¹Ø± Ú©ÛŒ Ø¨Ú¾Ø±Ø§Ø¦ÛŒ', 'Ø³ÛŒÚ‘Ú¾ÛŒÙˆÚº Ú©ÛŒ Ø¨Ù†Ø§ÙˆÙ¹'],
+  ),
+  const HMSService(
+    id: 'electrician',
+    titleUrdu: 'Ø§Ù„ÛŒÚ©Ù¹Ø±ÛŒØ´Ù†',
+    titleEng: 'Electrician',
+    titleArabic: 'ÙÙ†ÙŠ ÙƒÙ‡Ø±Ø¨Ø§Ø¡',
+    icon: Icons.electric_bolt_rounded,
+    accentColor: Color(0xFFFFEA00),
+    category: 'Electrical',
+    categoryUrdu: 'Ø¨Ø¬Ù„ÛŒ Ùˆ ÙˆØ§Ø¦Ø±Ù†Ú¯',
+    typicalRate: 'Rs. 700 - 1,500',
+    rateUnit: 'ÙÛŒ ÙˆØ²Ù¹ / Ù¾ÙˆØ§Ø¦Ù†Ù¹',
+    descriptionUrdu: 'Ù…Ú©Ù…Ù„ Ú¯Ú¾Ø± Ú©ÛŒ Concealed ÙˆØ§Ø¦Ø±Ù†Ú¯ØŒ Ø´Ø§Ø±Ù¹ Ø³Ø±Ú©Ù¹ ÙØ§Ù„Ù¹ Ù¹Ø±ÛŒØ³Ù†Ú¯ Ø§ÙˆØ± DB Ø¨Ø§Ú©Ø³ Ø³ÛŒÙ¹Ù†Ú¯',
+    commonTasks: ['Ø´Ø§Ø±Ù¹ Ø³Ø±Ú©Ù¹ Ú©ÛŒ ÙÙˆØ±ÛŒ Ù¹Ú¾ÛŒÚ©', 'ÚˆØ³Ù¹Ø±ÛŒ Ø¨ÛŒÙˆØ´Ù† Ø¨Ø§Ú©Ø³ (DB)', 'Ø³ÛŒÙ„Ù†Ú¯ Ù„Ø§Ø¦ÛŒÙ¹Ø³ ÙÚ©Ø³Ù†Ú¯', 'ÛŒÙˆ Ù¾ÛŒ Ø§ÛŒØ³ Ùˆ Ø³ÙˆÙ„Ø± Ú©Ù†Ú©Ø´Ù†'],
+  ),
+  const HMSService(
+    id: 'plumber',
+    titleUrdu: 'Ù¾Ù„Ù…Ø¨Ø±',
+    titleEng: 'Plumber',
+    titleArabic: 'Ø³Ø¨Ø§Ùƒ ØµØ­ÙŠ',
+    icon: Icons.plumbing_rounded,
+    accentColor: Color(0xFF448AFF),
+    category: 'Plumbing',
+    categoryUrdu: 'Ø³ÛŒÙ†ÛŒÙ¹Ø±ÛŒ Ø§ÙˆØ± Ù¾Ø§Ø¦Ù¾ Ù„Ø§Ø¦Ù†',
+    typicalRate: 'Rs. 800 - 1,600',
+    rateUnit: 'ÙÛŒ ÙˆØ²Ù¹ ÙÛŒØ³',
+    descriptionUrdu: 'Ù¾Ø§Ø¦Ù¾ Ù„ÛŒÚ©ÛŒØ¬ Ù…Ø±Ù…ØªØŒ Ù…ÙˆÙ¹Ø± Ùˆ Ú¯ÛŒØ²Ø± ÙÙ¹Ù†Ú¯ØŒ Ø¨Ø§ØªÚ¾ Ø±ÙˆÙ… Ø³ÛŒÙ†ÛŒÙ¹Ø±ÛŒ Ø§ÙˆØ± Ø³ÛŒÙˆØ±ÛŒØ¬ Ø­Ù„',
+    commonTasks: ['Ù¾Ø§Ø¦Ù¾ Ù„ÛŒÚ©Ø¬ Ùˆ Ø³ÛŒÙ¾Ø¬ Ú©Ø§ Ø­Ù„', 'ÙˆØ§Ù¹Ø± Ù¾Ù…Ù¾ Ùˆ Ù…ÙˆÙ¹Ø± ÙÙ¹Ù†Ú¯', 'Ø§Ù„ÛŒÚ©Ù¹Ø±Ú© / Ú¯ÛŒØ³ Ú¯ÛŒØ²Ø± Ù…Ø±Ù…Øª', 'Ø¨Ø§ØªÚ¾ Ø±ÙˆÙ… ÙÚ©Ø³Ú†Ø± ØªØ¨Ø¯ÛŒÙ„ÛŒ'],
+  ),
+  const HMSService(
+    id: 'tile_fixer',
+    titleUrdu: 'Ù¹Ø§Ø¦Ù„ ÙÚ©Ø³Ø±',
+    titleEng: 'Tile & Marble',
+    titleArabic: 'Ù…Ø¨Ù„Ø· Ø³ÙŠØ±Ø§Ù…ÙŠÙƒ ÙˆØ±Ø®Ø§Ù…',
+    icon: Icons.grid_view_rounded,
+    accentColor: Color(0xFF00BFA5),
+    category: 'Flooring',
+    categoryUrdu: 'ÙØ±Ø´ØŒ Ù¹Ø§Ø¦Ù„ Ùˆ Ù…Ø§Ø±Ø¨Ù„',
+    typicalRate: 'Rs. 45 - 90',
+    rateUnit: 'ÙÛŒ Ù…Ø±Ø¨Ø¹ ÙÙ¹ (Per Sq.ft)',
+    descriptionUrdu: 'Ú©Ú†Ù† Ùˆ ÙˆØ§Ø´ Ø±ÙˆÙ… Ù¹Ø§Ø¦Ù„Ø² ÙÚ©Ø³Ù†Ú¯ØŒ Ù…Ø§Ø±Ø¨Ù„ ÙØ±Ø´ ØªØ±Ø§Ø´ Ø§ÙˆØ± Ù¾Ø§Ù„Ø´ØŒ Ú¯Ø±ÛŒÙ†Ø§Ø¦Ù¹ Ú©Ù¹Ù†Ú¯',
+    commonTasks: ['ÙˆØ§Ø´ Ø±ÙˆÙ… Ø¯ÛŒÙˆØ§Ø± Ùˆ ÙØ±Ø´ Ù¹Ø§Ø¦Ù„Ø²', 'Ù…Ø§Ø±Ø¨Ù„ ÚˆØ§Ø¦Ù…Ù†Úˆ Ù¾Ø§Ù„Ø´', 'Ú©Ú†Ù† Ú¯Ø±ÛŒÙ†Ø§Ø¦Ù¹ Ø³Ù„ÛŒØ¨ ÙÙ¹Ù†Ú¯', 'Ø³ÛŒÚ‘Ú¾ÛŒÙˆÚº Ù¾Ø± Ù…Ø§Ø±Ø¨Ù„ ÙÚ©Ø³Ù†Ú¯'],
+  ),
+  const HMSService(
+    id: 'welder',
+    titleUrdu: 'ÙˆÛŒÙ„ÚˆØ±',
+    titleEng: 'Welder / Metal',
+    titleArabic: 'Ø­Ø¯Ø§Ø¯ ÙˆÙ„Ø­Ø§Ù…',
+    icon: Icons.hardware_rounded,
+    accentColor: Color(0xFFFF3D00),
+    category: 'Metalwork',
+    categoryUrdu: 'Ù„ÙˆÛØ§ØŒ Ú¯ÛŒÙ¹ Ùˆ ÙˆÛŒÙ„ÚˆÙ†Ú¯',
+    typicalRate: 'Rs. 1,800 - 2,500',
+    rateUnit: 'Ø¯ÛŒÛØ§Ú‘ÛŒ ÛŒØ§ ÙÛŒ Ù¾Ø±Ø§Ø¬ÛŒÚ©Ù¹',
+    descriptionUrdu: 'Ù…ÛŒÙ† Ú¯ÛŒÙ¹ØŒ Ø³ÛŒÙÙ¹ÛŒ Ú¯Ø±Ù„ØŒ Ú†Ú¾Øª Ø´ÛŒÚˆØŒ Ø³ÛŒÚ‘Ú¾ÛŒÙˆÚº Ú©Û’ Ø±ÛŒÙ„Ù†Ú¯ Ø§ÙˆØ± Ù„ÙˆÛÛ’ Ú©Ø§ ÛØ± Ú©Ø§Ù…',
+    commonTasks: ['Ù…ÛŒÙ† Ú¯ÛŒÙ¹ ÙˆÛŒÙ„ÚˆÙ†Ú¯ Ùˆ Ù…Ø±Ù…Øª', 'Ú©Ú¾Ú‘Ú©ÛŒÙˆÚº Ú©ÛŒ Ø³ÛŒÙÙ¹ÛŒ Ú¯Ø±Ù„', 'Ú†Ú¾Øª Ú©Ø§ Ø´ÛŒÚˆ Ùˆ Ù¹Ø±Ø³ ÙˆØ±Ú©', 'Ù„ÙˆÛÛ’ Ú©Û’ Ø¬Ù†Ú¯Ù„Û’'],
+  ),
+  const HMSService(
+    id: 'carpenter',
+    titleUrdu: 'Ú©Ø§Ø±Ù¾ÛŒÙ†Ù¹Ø±',
+    titleEng: 'Carpenter',
+    titleArabic: 'Ù†Ø¬Ø§Ø± Ø®Ø´Ø¨',
+    icon: Icons.carpenter_rounded,
+    accentColor: Color(0xFFA1887F),
+    category: 'Woodwork',
+    categoryUrdu: 'Ù„Ú©Ú‘ÛŒ Ú©Ø§ Ú©Ø§Ù… Ùˆ Ø§Ù„Ù…Ø§Ø±ÛŒ',
+    typicalRate: 'Rs. 2,000 - 2,800',
+    rateUnit: 'Ø±ÙˆØ²Ø§Ù†Û Ø¯ÛŒÛØ§Ú‘ÛŒ',
+    descriptionUrdu: 'Ø¯Ø±ÙˆØ§Ø²Û’ØŒ Ú©Ú†Ù† Ú©ÛŒØ¨Ù†Ù¹Ø³ØŒ Ø§Ù„Ù…Ø§Ø±ÛŒØ§ÚºØŒ ØµÙˆÙÛ Ù„Ú©Ú‘ÛŒ Ø±ÛŒÙ¾ÛŒØ¦Ø± Ø§ÙˆØ± ØªØ§Ù„Û’ ÙÚ©Ø³Ù†Ú¯',
+    commonTasks: ['Ú©Ú†Ù† Ú©ÛŒØ¨Ù†Ù¹ ÚˆÛŒØ²Ø§Ø¦Ù† Ùˆ ÙÙ¹Ù†Ú¯', 'Ø¯Ø±ÙˆØ§Ø²Û’ Ø§ÛŒÚˆØ¬Ø³Ù¹Ù…Ù†Ù¹', 'Ø§Ù„Ù…Ø§Ø±ÛŒÙˆÚº Ú©Û’ Ø¯Ø±Ø§Ø² Ùˆ Ù„Ø§Ú© Ù¹Ú¾ÛŒÚ©', 'ÚˆÙˆØ± Ù„Ø§Ú© ØªØ¨Ø¯ÛŒÙ„ÛŒ'],
+  ),
+  const HMSService(
+    id: 'false_ceiling',
+    titleUrdu: 'ÙØ§Ù„Ø³ Ø³ÛŒÙ„Ù†Ú¯',
+    titleEng: 'False Ceiling',
+    titleArabic: 'Ø£Ø³Ù‚Ù Ù…Ø¹Ù„Ù‚Ø© ÙˆØ¬Ø¨Ø³',
+    icon: Icons.layers_rounded,
+    accentColor: Color(0xFFE040FB),
+    category: 'Ceiling',
+    categoryUrdu: 'Ø¬Ù¾Ø³Ù… Ùˆ Ù¾ÛŒ ÙˆÛŒ Ø³ÛŒ Ø³ÛŒÙ„Ù†Ú¯',
+    typicalRate: 'Rs. 120 - 210',
+    rateUnit: 'ÙÛŒ Ù…Ø±Ø¨Ø¹ ÙÙ¹ (Per Sq.ft)',
+    descriptionUrdu: 'Ø¬Ù¾Ø³Ù… Ø¨ÙˆØ±ÚˆØŒ Ù¾ÛŒ ÙˆÛŒ Ø³ÛŒ Ø³ÛŒÙ„Ù†Ú¯ØŒ Ø§ÛŒÙ„ Ø§ÛŒ ÚˆÛŒ Ù„Ø§Ø¦Ù¹ Ú©Ù¹Ø³ Ø§ÙˆØ± Ø¬Ø¯ÛŒØ¯ Ø±ÙˆÙ ÚˆÛŒØ²Ø§Ø¦Ù†',
+    commonTasks: ['ÚˆØ±Ø§Ø¦Ù†Ú¯ Ø±ÙˆÙ… Ø¬Ù¾Ø³Ù… ÙØ§Ù„ Ø³ÛŒÙ„Ù†Ú¯', 'Ø¨Ø§ØªÚ¾ Ø±ÙˆÙ… Ù¾ÛŒ ÙˆÛŒ Ø³ÛŒ Ø³ÛŒÙ„Ù†Ú¯', 'Ø³ÛŒÙ„Ù†Ú¯ ÚˆØ§Ø¦ÙˆÙ† Ù„Ø§Ø¦Ù¹ Ú©Ù¹Ø³', 'Ú©Ø§Ø±Ù†ÛŒØ³ Ù¾Ù¹ÛŒ ÚˆÛŒØ²Ø§Ø¦Ù†'],
+  ),
+  const HMSService(
+    id: 'painter',
+    titleUrdu: 'Ù¾ÛŒÙ†Ù¹Ø± Ùˆ Ù¾Ø§Ù„Ø´',
+    titleEng: 'Paint & Polish',
+    titleArabic: 'Ø¯Ù‡Ø§Ù† ÙˆØªØ´Ø·ÙŠØ¨',
+    icon: Icons.format_paint_rounded,
+    accentColor: Color(0xFF00E676),
+    category: 'Finishing',
+    categoryUrdu: 'Ø±Ù†Ú¯ Ø±ÙˆØºÙ† Ùˆ ÙˆÙˆÚˆ Ù¾Ø§Ù„Ø´',
+    typicalRate: 'Rs. 18 - 35',
+    rateUnit: 'ÙÛŒ Ù…Ø±Ø¨Ø¹ ÙÙ¹ (Double Coat)',
+    descriptionUrdu: 'ÙˆØ§Ù„ Ù¾Ù¹ÛŒØŒ Ù¾Ù„Ø§Ø³Ù¹Ú© Ø§ÛŒÙ…ÙˆÙ„Ø´Ù†ØŒ ÙˆÛŒØ¯Ø± Ø´ÛŒÙ¹ØŒ Ù¹ÛŒÚ©Ø³Ú†Ø± Ù¾ÛŒÙ†Ù¹ Ø§ÙˆØ± ÙØ±Ù†ÛŒÚ†Ø± Ù¾Ø§Ù„Ø´',
+    commonTasks: ['Ø§Ù†Ø¯Ø±ÙˆÙ†ÛŒ Ø¯ÛŒÙˆØ§Ø±ÙˆÚº Ù¾Ø± Ù¾ÛŒÙ†Ù¹ Ùˆ Ù¾Ù¹ÛŒ', 'Ø¨ÛŒØ±ÙˆÙ†ÛŒ Ø¯ÛŒÙˆØ§Ø±ÙˆÚº Ù¾Ø± ÙˆÛŒØ¯Ø± Ø´ÛŒÙ¹', 'Ù„Ú©Ú‘ÛŒ Ú©Û’ Ø¯Ø±ÙˆØ§Ø²ÙˆÚº Ú©ÛŒ Ù„Ú©ÙˆØ± Ù¾Ø§Ù„Ø´', 'Ø³ÛŒÙ¾Ø¬ Ù¹Ø±ÛŒÙ¹Ù…Ù†Ù¹'],
+  ),
+  const HMSService(
+    id: 'interior_designer',
+    titleUrdu: 'Ø§Ù†Ù¹ÛŒØ±ÛŒØ¦Ø± ÚˆÛŒØ²Ø§Ø¦Ù†Ø±',
+    titleEng: 'Interior Decor',
+    titleArabic: 'Ù…ØµÙ…Ù… Ø¯ÙŠÙƒÙˆØ± Ø¯Ø§Ø®Ù„ÙŠ',
+    icon: Icons.palette_rounded,
+    accentColor: Color(0xFF40C4FF),
+    category: 'Decor',
+    categoryUrdu: 'Ø§Ù†Ø¯Ø±ÙˆÙ†ÛŒ ÚˆÛŒÚ©ÙˆØ±ÛŒØ´Ù†',
+    typicalRate: 'Rs. 30,000 - 90,000',
+    rateUnit: 'Ù…Ú©Ù…Ù„ Ø±ÙˆÙ… Ù¾ÛŒÚ©Ø¬',
+    descriptionUrdu: 'ÙˆØ§Ù„ Ù¾ÛŒÙ¾Ø±ØŒ Ù…ÛŒÚˆÛŒØ§ ÙˆØ§Ù„ØŒ Ø§ÛŒÚ©ÙˆØ³Ù¹Ú© Ù¾ÛŒÙ†Ù„ØŒ Ø¬Ø¯ÛŒØ¯ Ù¾Ø±Ø¯Û’ Ø§ÙˆØ± Ù„Ø§Ø¦ÛŒÙ¹Ù†Ú¯ Ù¾Ù„Ø§Ù†Ù†Ú¯',
+    commonTasks: ['Ø§ÛŒÙ„ Ø§ÛŒ ÚˆÛŒ Ù…ÛŒÚˆÛŒØ§ ÙˆØ§Ù„ ÚˆÛŒØ²Ø§Ø¦Ù†', 'Ø§Ù…Ù¾ÙˆØ±Ù¹Úˆ ÙˆØ§Ù„ Ù¾ÛŒÙ¾Ø± ÙÚ©Ø³Ù†Ú¯', 'Ø§ÛŒÚ©ÙˆØ³Ù¹Ú© ÙˆØ§Ù„ Ù¾ÛŒÙ†Ù„Ø²', 'Ù…ÙˆÚˆ Ù„Ø§Ø¦Ù¹Ù†Ú¯ Ùˆ Ù¾Ø±Ø¯Û’'],
+  ),
+  const HMSService(
+    id: 'ac_machinery',
+    titleUrdu: 'AC Ùˆ Ù…Ø´ÛŒÙ†Ø±ÛŒ',
+    titleEng: 'AC & Machinery',
+    titleArabic: 'ØªÙƒÙŠÙŠÙ ÙˆØµÙŠØ§Ù†Ø© Ø£Ø¬Ù‡Ø²Ø©',
+    icon: Icons.ac_unit_rounded,
+    accentColor: Color(0xFF7C4DFF),
+    category: 'HVAC',
+    categoryUrdu: 'Ø§Û’ Ø³ÛŒ Ùˆ Ú¯Ú¾Ø±ÛŒÙ„Ùˆ Ù…Ø´ÛŒÙ†Ø±ÛŒ',
+    typicalRate: 'Rs. 1,500 - 3,500',
+    rateUnit: 'ÙÛŒ Ø³Ø±ÙˆØ³ / Ú¯ÛŒØ³ Ø±ÛŒ ÙÙ„',
+    descriptionUrdu: 'Ø§Ù†ÙˆØ±Ù¹Ø± Ø§Û’ Ø³ÛŒ Ø³Ø±ÙˆØ³ØŒ Ú¯ÛŒØ³ Ú†Ø§Ø±Ø¬Ù†Ú¯ØŒ ÙØ±ÛŒØ¬ Ùˆ ÙˆØ§Ø´Ù†Ú¯ Ù…Ø´ÛŒÙ† Ø±ÛŒÙ¾ÛŒØ¦Ø± Ø§ÙˆØ± Ø§Ù†Ø³Ù¹Ø§Ù„ÛŒØ´Ù†',
+    commonTasks: ['Ù¾Ø±ÛŒØ´Ø± ÙˆØ§Ø´Ø± Ø³Û’ Ø§Û’ Ø³ÛŒ Ø³Ø±ÙˆØ³', 'Ø§Ù†ÙˆØ±Ù¹Ø± Ú¯ÛŒØ³ Ù¹Ø§Ù¾ Ø§Ù¾', 'Ø§Û’ Ø³ÛŒ Ù†Ø¦ÛŒ Ø§Ù†Ø³Ù¹Ø§Ù„ÛŒØ´Ù†', 'Ù¾ÛŒ Ø³ÛŒ Ø¨ÛŒ Ø³Ø±Ú©Ù¹ Ø¨ÙˆØ±Úˆ Ø±ÛŒÙ¾ÛŒØ¦Ø±'],
+  ),
+];
+
+// Seeded verified pros
+final List<WorkerProfile> kInitialWorkers = [
+  WorkerProfile(
+    id: 'w1',
+    name: 'Ø­Ø§Ø¬ÛŒ Ù…Ø­Ù…Ø¯ Ø´ÙÛŒÙ‚',
+    serviceId: 'contractor',
+    phone: '0300-8451928',
+    whatsapp: '923008451928',
+    experienceYears: 18,
+    rateText: 'Rs. 2,400 / Sq.ft',
+    city: 'Lahore (Ù„Ø§ÛÙˆØ±)',
+    area: 'DHA, Gulberg & Bahria Town',
+    rating: 4.9,
+    jobsCompleted: 64,
+    cnicVerified: true,
+    bio: '18 Ø³Ø§Ù„ Ø³Û’ A+ Ú©ÙˆØ§Ù„Ù¹ÛŒ Ú©Û’ Ø±ÛØ§Ø¦Ø´ÛŒ Ø¨Ù†Ú¯Ù„Û’ Ø§ÙˆØ± Ú©Ù…Ø±Ø´Ù„ Ù¾Ø±Ø§Ø¬ÛŒÚ©Ù¹Ø³ Ù…Ú©Ù…Ù„ Ú©Ø± Ø±ÛØ§ ÛÙˆÚºÛ” Ø³Ù¹Ø±Ú©Ú†Ø±Ù„ Ú¯Ø§Ø±Ù†Ù¹ÛŒÛ”',
+    badgeLevel: 'Master Craftsman',
+  ),
+  WorkerProfile(
+    id: 'w2',
+    name: 'Ø§Ù†Ø¬ÛŒÙ†Ø¦Ø± Ø¨Ù„Ø§Ù„ Ø§Ø±Ø´Ø¯ (UET)',
+    serviceId: 'civil_engineer',
+    phone: '0321-4927381',
+    whatsapp: '923214927381',
+    experienceYears: 12,
+    rateText: 'Rs. 6,000 / ÙˆØ²Ù¹ Ù…Ø¹Ø§Ø¦Ù†Û',
+    city: 'Islamabad / Rawalpindi',
+    area: 'F-7, Bahria Town & DHA',
+    rating: 5.0,
+    jobsCompleted: 118,
+    cnicVerified: true,
+    bio: 'PEC Ø±Ø¬Ø³Ù¹Ø±Úˆ Ø³Ù¹Ø±Ú©Ú†Ø±Ù„ Ø§Ù†Ø¬ÛŒÙ†Ø¦Ø±Û” ÙØ§Ø¤Ù†ÚˆÛŒØ´Ù† Ù„ÙˆÚˆ Ø§ÙˆØ± Ú©Ø±ÛŒÚ©Ø³ Ø§Ù†Ø³Ù¾Ú©Ø´Ù† Ú©Ø§ Ù…Ú©Ù…Ù„ Ø­Ù„Û”',
+    badgeLevel: 'Top Rated',
+  ),
+  WorkerProfile(
+    id: 'w3',
+    name: 'Ø§Ø³ØªØ§Ø¯ ÙÛŒØ§Ø¶ Ø§Ù„ÛŒÚ©Ù¹Ø±ÛŒØ´Ù†',
+    serviceId: 'electrician',
+    phone: '0312-5509123',
+    whatsapp: '923125509123',
+    experienceYears: 10,
+    rateText: 'Rs. 800 ÙˆØ²Ù¹ / Rs. 150 Ù¾ÙˆØ§Ø¦Ù†Ù¹',
+    city: 'Lahore (Ù„Ø§ÛÙˆØ±)',
+    area: 'Model Town, Johar Town & Cantt',
+    rating: 4.9,
+    jobsCompleted: 210,
+    cnicVerified: true,
+    bio: 'ÙÙˆØ±ÛŒ 30 Ù…Ù†Ù¹ Ø§ÛŒÙ…Ø±Ø¬Ù†Ø³ÛŒ ÙØ§Ù„Ù¹ Ù¹Ø±ÛŒØ³Ù†Ú¯ØŒ Ø³ÙˆÙ„Ø± Ø§Ù†ÙˆØ±Ù¹Ø± Ø§ÙˆØ± ÚˆÛŒ Ø¨ÛŒ Ø¨Ø§Ú©Ø³ Ø³ÛŒÙ¹Ù†Ú¯Û”',
+    badgeLevel: 'Top Rated',
+  ),
+  WorkerProfile(
+    id: 'w4',
+    name: 'Ù…Ø­Ù…Ø¯ Ø¹Ø«Ù…Ø§Ù† Ù¾Ù„Ù…Ø¨Ø±',
+    serviceId: 'plumber',
+    phone: '0333-6829104',
+    whatsapp: '923336829104',
+    experienceYears: 11,
+    rateText: 'Rs. 900 ÙˆØ²Ù¹ ÙÛŒØ³',
+    city: 'Rawalpindi (Ø±Ø§ÙˆÙ„Ù¾Ù†ÚˆÛŒ)',
+    area: 'Saddar, Westridge & Chaklala',
+    rating: 4.9,
+    jobsCompleted: 156,
+    cnicVerified: true,
+    bio: 'Ù¾Ø§Ø¦Ù¾ Ù„ÛŒÚ©ÛŒØ¬ Ú©Ø§ Ù…Ø³ØªÙ‚Ù„ Ø­Ù„ØŒ Ù…ÙˆÙ¹Ø± Ù¾Ù…Ù¾ Ø§Ù†Ø³Ù¹Ø§Ù„ÛŒØ´Ù†ØŒ Ú¯ÛŒØ²Ø± Ùˆ ÛÛŒÙ¹Ø± ÙÙ¹Ù†Ú¯Û”',
+    badgeLevel: 'Verified Pro',
+  ),
+  WorkerProfile(
+    id: 'w5',
+    name: 'Ú©Ø§Ø´Ù Ø¹Ù„ÛŒ Ù¹Ø§Ø¦Ù„ Ù…Ø§Ø³Ù¹Ø±',
+    serviceId: 'tile_fixer',
+    phone: '0304-9912837',
+    whatsapp: '923049912837',
+    experienceYears: 9,
+    rateText: 'Rs. 55 / Sq.ft',
+    city: 'Karachi (Ú©Ø±Ø§Ú†ÛŒ)',
+    area: 'Gulshan, Johar & Clifton',
+    rating: 4.8,
+    jobsCompleted: 88,
+    cnicVerified: true,
+    bio: 'Ù¾ÙˆØ±Ø³Ù„ÛŒÙ† Ù¹Ø§Ø¦Ù„ØŒ Ú¯Ø±ÛŒÙ†Ø§Ø¦Ù¹ Ø§ÙˆØ± Ø§Ø·Ø§Ù„ÙˆÛŒ Ù…Ø§Ø±Ø¨Ù„ Ú©ÛŒ Ø²ÛŒØ±Ùˆ Ø¬Ø§Ø¦Ù†Ù¹ ÙÚ©Ø³Ù†Ú¯Û” Ù„ÛŒØ²Ø± Ù„ÛŒÙˆÙ„Ù†Ú¯Û”',
+    badgeLevel: 'Top Rated',
+  ),
+];
+
+// ----------------------------------------------------------------------------
+// MAIN DASHBOARD SCREEN
+// ----------------------------------------------------------------------------
+class HMSDashboardScreen extends StatefulWidget {
+  const HMSDashboardScreen({super.key});
+
+  @override
+  State<HMSDashboardScreen> createState() => _HMSDashboardScreenState();
+}
+
+class _HMSDashboardScreenState extends State<HMSDashboardScreen> {
+  String _selectedLanguage = 'Urdu / Ø§Ø±Ø¯Ùˆ';
+  String _searchQuery = '';
+  String _selectedCategory = 'all';
+  final List<WorkerProfile> _workers = List.from(kInitialWorkers);
+  final List<BookingOrder> _orders = [];
+
+  List<HMSService> get _filteredServices {
+    return kHmsServices.where((svc) {
+      final matchesSearch = svc.titleUrdu.contains(_searchQuery) ||
+          svc.titleEng.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          svc.category.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesCat = _selectedCategory == 'all' ||
+          svc.category.toLowerCase() == _selectedCategory.toLowerCase();
+      return matchesSearch && matchesCat;
+    }).toList();
+  }
+
+  void _addNewWorker(WorkerProfile worker) {
+    setState(() {
+      _workers.insert(0, worker);
+    });
+  }
+
+  void _addBookingOrder(BookingOrder order) {
+    setState(() {
+      _orders.insert(0, order);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment(0, -0.3),
+              radius: 1.6,
+              colors: [
+                Color(0xFF141F33),
+                Color(0xFF090E18),
+                Color(0xFF030509),
+              ],
+            ),
+          ),
+          child: Column(
+            children: [
+              // Top Header with 3D Glowing HMS Logo & Play Store Badge
+              _buildHeaderSection(),
+
+              const SizedBox(height: 8),
+
+              // Title and Language Dropdown Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          "Ø´Ø¹Ø¨Û Ù…Ù†ØªØ®Ø¨ Ú©Ø±ÛŒÚº / Select Work",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00E5FF).withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFF00E5FF).withOpacity(0.4)),
+                          ),
+                          child: const Text(
+                            "13 Services",
+                            style: TextStyle(color: Color(0xFF00E5FF), fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        )
+                      ],
+                    ),
+                    DropdownButton<String>(
+                      value: _selectedLanguage,
+                      dropdownColor: const Color(0xFF162133),
+                      style: const TextStyle(color: Color(0xFF00E5FF), fontSize: 12, fontWeight: FontWeight.bold),
+                      underline: const SizedBox.shrink(),
+                      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF00E5FF), size: 18),
+                      items: ["Urdu / Ø§Ø±Ø¯Ùˆ", "English", "Arabic / Ø¹Ø±Ø¨ÙŠ"]
+                          .map((lang) => DropdownMenuItem(value: lang, child: Text(lang)))
+                          .toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedLanguage = val);
+                      },
+                    )
+                  ],
+                ),
+              ),
+
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                child: TextField(
+                  onChanged: (val) => setState(() => _searchQuery = val),
+                  style: const TextStyle(fontSize: 12, color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: "Ø³Ø±ÙˆØ³ ÛŒØ§ Ú©Ø§Ø±ÛŒÚ¯Ø± ØªÙ„Ø§Ø´ Ú©Ø±ÛŒÚº (Ù…Ø«Ù„Ø§Ù‹: Ù¾Ù„Ù…Ø¨Ø±ØŒ Ù¹Ø§Ø¦Ù„ØŒ ÙˆØ§Ø¦Ø±Ù†Ú¯)...",
+                    hintStyle: const TextStyle(color: Colors.white38, fontSize: 11),
+                    prefixIcon: const Icon(Icons.search, color: Color(0xFF00E5FF), size: 18),
+                    filled: true,
+                    fillColor: const Color(0xFF111826),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: Color(0xFF00E5FF)),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Filter Category Chips
+              SizedBox(
+                height: 38,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  children: [
+                    _buildCategoryChip('all', 'ØªÙ…Ø§Ù… Ø³Ø±ÙˆØ³Ø² (All)'),
+                    _buildCategoryChip('civil work', 'Ø³ÙˆÙ„ Ø§ÙˆØ± Ú†Ù†Ø§Ø¦ÛŒ'),
+                    _buildCategoryChip('electrical', 'Ø§Ù„ÛŒÚ©Ù¹Ø±ÛŒÚ©Ù„'),
+                    _buildCategoryChip('plumbing', 'Ù¾Ù„Ù…Ø¨Ù†Ú¯'),
+                    _buildCategoryChip('flooring', 'Ù¹Ø§Ø¦Ù„ Ùˆ Ù…Ø§Ø±Ø¨Ù„'),
+                    _buildCategoryChip('finishing', 'Ù¾ÛŒÙ†Ù¹ Ùˆ Ù¾Ø§Ù„Ø´'),
+                    _buildCategoryChip('management', 'Ù¹Ú¾ÛŒÚ©ÛŒØ¯Ø§Ø± Ùˆ Ù…ÛŒÙ†Ø¬Ù…Ù†Ù¹'),
+                    _buildCategoryChip('engineering', 'Ø§Ù†Ø¬ÛŒÙ†Ø¦Ø±Ù†Ú¯'),
+                    _buildCategoryChip('design', 'Ø¢Ø±Ú©ÛŒÙ¹ÛŒÚ©Ù¹ ÚˆÛŒØ²Ø§Ø¦Ù†'),
+                    _buildCategoryChip('woodwork', 'Ú©Ø§Ø±Ù¾ÛŒÙ†Ù¹Ø±'),
+                    _buildCategoryChip('metalwork', 'ÙˆÛŒÙ„ÚˆØ±'),
+                    _buildCategoryChip('ceiling', 'ÙØ§Ù„Ø³ Ø³ÛŒÙ„Ù†Ú¯'),
+                    _buildCategoryChip('hvac', 'Ø§Û’ Ø³ÛŒ Ùˆ Ù…Ø´ÛŒÙ†Ø±ÛŒ'),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              // 3D Crystal Water Grid of Services
+              Expanded(
+                child: _filteredServices.isEmpty
+                    ? const Center(
+                        child: Text(
+                          "Ú©ÙˆØ¦ÛŒ Ø³Ø±ÙˆØ³ Ù†ÛÛŒÚº Ù…Ù„ÛŒÛ” Ø¨Ø±Ø§Û Ú©Ø±Ù… Ø¯ÙˆØ¨Ø§Ø±Û ØªÙ„Ø§Ø´ Ú©Ø±ÛŒÚºÛ”",
+                          style: TextStyle(color: Colors.white54, fontSize: 13),
+                        ),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        itemCount: _filteredServices.length,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 14,
+                          mainAxisSpacing: 14,
+                          childAspectRatio: 1.05,
+                        ),
+                        itemBuilder: (context, index) {
+                          final service = _filteredServices[index];
+                          return CrystalWater3DButton(
+                            service: service,
+                            selectedLanguage: _selectedLanguage,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ServiceDetailAndPageCreatorScreen(
+                                    service: service,
+                                    workers: _workers,
+                                    onAddWorker: _addNewWorker,
+                                    onAddBooking: _addBookingOrder,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+              ),
+
+              // Bottom Quick Utility Bar
+              _buildBottomActionBar(context),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(String catId, String label) {
+    final isSelected = _selectedCategory == catId;
+    return Padding(
+      padding: const EdgeInsets.only(right: 6.0),
+      child: ChoiceChip(
+        label: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? const Color(0xFF00E5FF) : Colors.white70,
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        selected: isSelected,
+        selectedColor: const Color(0xFF00E5FF).withOpacity(0.18),
+        backgroundColor: Colors.white.withOpacity(0.04),
+        side: BorderSide(
+          color: isSelected ? const Color(0xFF00E5FF) : Colors.white.withOpacity(0.12),
+        ),
+        onSelected: (_) => setState(() => _selectedCategory = catId),
+      ),
+    );
+  }
+
+  Widget _buildHeaderSection() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(22)),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
+      ),
+      child: Row(
+        children: [
+          // 3D Glowing HMS Logo
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF00E5FF), Color(0xFF0055FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00E5FF).withOpacity(0.55),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                )
+              ],
+              border: Border.all(color: Colors.white.withOpacity(0.6), width: 1.5),
+            ),
+            child: const Center(
+              child: Text(
+                "HMS",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      "HMS - Home Maintenance",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: Colors.greenAccent.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        "Verified",
+                        style: TextStyle(color: Colors.greenAccent, fontSize: 9, fontWeight: FontWeight.bold),
+                      ),
+                    )
+                  ],
+                ),
+                const SizedBox(height: 3),
+                const Text(
+                  "ØªÙ…Ø§Ù… Ø³ÙˆÙ„ Ø§ÙˆØ± ÛÙˆÙ… Ø³Ø±ÙˆØ³Ø² Ø§ÛŒÚ© Ø¬Ú¯Û (Online Pro Dispatch)",
+                  style: TextStyle(color: Colors.white60, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          // Google Play Store Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: Row(
+              children: const [
+                Icon(Icons.play_arrow_rounded, color: Colors.greenAccent, size: 16),
+                SizedBox(width: 3),
+                Text(
+                  "4.9 â˜…",
+                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                )
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomActionBar(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF090E18),
+        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08))),
+      ),
+      child: Row(
+        children: [
+          // Emergency SOS Button
+          Expanded(
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE53935).withOpacity(0.2),
+                foregroundColor: const Color(0xFFFF5252),
+                side: const BorderSide(color: Color(0xFFFF5252), width: 1.2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              onPressed: () => _showEmergencyDialog(context),
+              icon: const Icon(Icons.warning_amber_rounded, size: 16),
+              label: const Text("Ø§ÛŒÙ…Ø±Ø¬Ù†Ø³ÛŒ Ø³Ø±ÙˆØ³ (SOS)", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Cost Estimator Button
+          Expanded(
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00E5FF).withOpacity(0.15),
+                foregroundColor: const Color(0xFF00E5FF),
+                side: const BorderSide(color: Color(0xFF00E5FF), width: 1.2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+              onPressed: () => _showCostEstimatorDialog(context),
+              icon: const Icon(Icons.calculate_rounded, size: 16),
+              label: const Text("Ù„Ø§Ú¯Øª Ú©ÛŒÙ„Ú©ÙˆÙ„ÛŒÙ¹Ø±", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEmergencyDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: const [
+                  Icon(Icons.shield_rounded, color: Colors.redAccent, size: 24),
+                  SizedBox(width: 8),
+                  Text("HMS ÙÙˆØ±ÛŒ ÛÙ†Ú¯Ø§Ù…ÛŒ Ù…Ø±Ù…Øª (SOS)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "Ø´Ø§Ø±Ù¹ Ø³Ø±Ú©Ù¹ØŒ Ù¾Ø§Ø¦Ù¾ Ù„ÛŒÚ©ÛŒØ¬ ÛŒØ§ Ú¯ÛŒØ³ Ø§ÛŒÙ…Ø±Ø¬Ù†Ø³ÛŒ Ù…ÛŒÚº Ù‚Ø±ÛŒØ¨ÛŒ Ù…ØµØ¯Ù‚Û Ú©Ø§Ø±ÛŒÚ¯Ø± 25 ØªØ§ 35 Ù…Ù†Ù¹ Ù…ÛŒÚº Ø¢Ù¾ Ú©Û’ Ú¯Ú¾Ø± Ù¾ÛÙ†Ú†Û’ Ú¯Ø§Û”",
+                style: TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                tileColor: Colors.white.withOpacity(0.04),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                leading: const Icon(Icons.phone_in_talk, color: Colors.greenAccent),
+                title: const Text("Ø§ÛŒÙ…Ø±Ø¬Ù†Ø³ÛŒ Ú©Ù†Ù¹Ø±ÙˆÙ„ Ø±ÙˆÙ… ÛÛŒÙ„Ù¾ Ù„Ø§Ø¦Ù†", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                subtitle: const Text("0300-000-HMS1 (24/7 Live)", style: TextStyle(fontSize: 12, color: Colors.cyanAccent)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("ÛÛŒÙ„Ù¾ Ù„Ø§Ø¦Ù† Ù¾Ø± ÚˆØ§Ø¦Ù„ Ú©ÛŒØ§ Ø¬Ø§ Ø±ÛØ§ ÛÛ’..."), backgroundColor: Colors.green),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showCostEstimatorDialog(BuildContext context) {
+    double sqft = 1125; // 5 Marla
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final totalGreyCost = sqft * 2650;
+            return AlertDialog(
+              backgroundColor: const Color(0xFF0E1626),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text("ØªØ¹Ù…ÛŒØ±Ø§ØªÛŒ Ù„Ø§Ú¯Øª Ú©ÛŒÙ„Ú©ÙˆÙ„ÛŒÙ¹Ø± (Estimator)", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF00E5FF))),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Ø±Ù‚Ø¨Û: ${sqft.toInt()} Ù…Ø±Ø¨Ø¹ ÙÙ¹ (Sq.ft)", style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                  Slider(
+                    value: sqft,
+                    min: 250,
+                    max: 4500,
+                    divisions: 17,
+                    activeColor: const Color(0xFF00E5FF),
+                    onChanged: (val) => setModalState(() => sqft = val),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _presetChip("5 Ù…Ø±Ù„Û", 1125, () => setModalState(() => sqft = 1125)),
+                      _presetChip("10 Ù…Ø±Ù„Û", 2250, () => setModalState(() => sqft = 2250)),
+                      _presetChip("1 Ú©Ù†Ø§Ù„", 4500, () => setModalState(() => sqft = 4500)),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.04),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF00E5FF).withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text("ØªØ®Ù…ÛŒÙ†ÛŒ Ú¯Ø±Û’ Ø³Ù¹Ø±Ú©Ú†Ø± Ù„Ø§Ú¯Øª:", style: TextStyle(color: Colors.white70, fontSize: 11)),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Rs. ${totalGreyCost.toStringAsFixed(0)}",
+                          style: const TextStyle(color: Color(0xFF00E5FF), fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text("Ø¨Ù†Ø¯ Ú©Ø±ÛŒÚº (Close)", style: TextStyle(color: Colors.white70)),
+                )
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _presetChip(String label, double val, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(label, style: const TextStyle(fontSize: 10, color: Colors.cyanAccent)),
+      ),
+    );
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 3D CRYSTAL WATER BUTTON (Blinking Side LED + Press Shine)
+// ----------------------------------------------------------------------------
+class CrystalWater3DButton extends StatefulWidget {
+  final HMSService service;
+  final String selectedLanguage;
+  final VoidCallback onTap;
+
+  const CrystalWater3DButton({
+    super.key,
+    required this.service,
+    required this.selectedLanguage,
+    required this.onTap,
+  });
+
+  @override
+  State<CrystalWater3DButton> createState() => _CrystalWater3DButtonState();
+}
+
+class _CrystalWater3DButtonState extends State<CrystalWater3DButton>
+    with TickerProviderStateMixin {
+  late AnimationController _blinkController;
+  late Animation<double> _blinkAnimation;
+
+  late AnimationController _pressController;
+  late Animation<double> _shineAnimation;
+
+  bool _isPressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // LED Blinking Animation
+    _blinkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 750),
+    )..repeat(reverse: true);
+
+    _blinkAnimation = Tween<double>(begin: 0.15, end: 1.0).animate(_blinkController);
+
+    // Wave Sheen on Tap Animation
+    _pressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _shineAnimation = Tween<double>(begin: -1.2, end: 2.2).animate(
+      CurvedAnimation(parent: _pressController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _blinkController.dispose();
+    _pressController.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    HapticFeedback.lightImpact();
+    _pressController.forward(from: 0.0).then((_) => widget.onTap());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final title = widget.selectedLanguage == "English"
+        ? widget.service.titleEng
+        : widget.selectedLanguage == "Arabic / Ø¹Ø±Ø¨ÙŠ"
+            ? widget.service.titleArabic
+            : widget.service.titleUrdu;
+
+    final subtitle = widget.selectedLanguage == "English"
+        ? widget.service.titleUrdu
+        : widget.service.titleEng;
+
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        _handleTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.92 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: Stack(
+          children: [
+            // 3D Crystal Beveled Container
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    widget.service.accentColor.withOpacity(0.35),
+                    Colors.white.withOpacity(0.08),
+                    widget.service.accentColor.withOpacity(0.12),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.service.accentColor.withOpacity(_isPressed ? 0.15 : 0.32),
+                    blurRadius: _isPressed ? 6 : 16,
+                    offset: _isPressed ? const Offset(0, 2) : const Offset(0, 6),
+                  ),
+                ],
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.35),
+                  width: 1.3,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: Stack(
+                  children: [
+                    // Water Fluid Fluidity Backdrop
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              widget.service.accentColor.withOpacity(0.22),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Icon & Typography
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: widget.service.accentColor.withOpacity(0.15),
+                                border: Border.all(color: widget.service.accentColor.withOpacity(0.3)),
+                              ),
+                              child: Icon(
+                                widget.service.icon,
+                                size: 28,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              title,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white60,
+                                fontSize: 10,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.white12),
+                              ),
+                              child: Text(
+                                widget.service.typicalRate.split('-')[0].trim(),
+                                style: const TextStyle(color: Colors.white70, fontSize: 8),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Press Shine Wave
+                    AnimatedBuilder(
+                      animation: _pressController,
+                      builder: (context, child) {
+                        return FractionalTranslation(
+                          translation: Offset(_shineAnimation.value, 0),
+                          child: Container(
+                            width: 50,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.white.withOpacity(0.55),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Pulsing LED Micro Indicator Light (Top Right)
+            Positioned(
+              top: 10,
+              right: 10,
+              child: AnimatedBuilder(
+                animation: _blinkAnimation,
+                builder: (context, child) {
+                  return Container(
+                    width: 9,
+                    height: 9,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: widget.service.accentColor.withOpacity(_blinkAnimation.value),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.service.accentColor.withOpacity(_blinkAnimation.value),
+                          blurRadius: 7,
+                          spreadRadius: 2.5,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ----------------------------------------------------------------------------
+// DUAL MODE SCREEN: BOOK WORKER & CREATE WORKER PAGE
+// ----------------------------------------------------------------------------
+class ServiceDetailAndPageCreatorScreen extends StatefulWidget {
+  final HMSService service;
+  final List<WorkerProfile> workers;
+  final ValueChanged<WorkerProfile> onAddWorker;
+  final ValueChanged<BookingOrder> onAddBooking;
+
+  const ServiceDetailAndPageCreatorScreen({
+    super.key,
+    required this.service,
+    required this.workers,
+    required this.onAddWorker,
+    required this.onAddBooking,
+  });
+
+  @override
+  State<ServiceDetailAndPageCreatorScreen> createState() =>
+      _ServiceDetailAndPageCreatorScreenState();
+}
+
+class _ServiceDetailAndPageCreatorScreenState
+    extends State<ServiceDetailAndPageCreatorScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  // Contractor Form Controllers
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _expController = TextEditingController(text: "6");
+  final _rateController = TextEditingController();
+  final _cityController = TextEditingController(text: "Lahore (Ù„Ø§ÛÙˆØ±)");
+  final _areaController = TextEditingController();
+  final _bioController = TextEditingController();
+  int _uploadedPhotosCount = 2;
+  bool _hasVideoUploaded = false;
+
+  // HMS Worker Wallet & Commission State
+  double _workerWalletBalance = 2450.0;
+  final double _commissionRate = 5.0; // 5% App Commission
+
+  // HMS Worker Wallet & Commission Status Card
+  Widget buildWorkerWalletCard(double walletBalance, double commissionRate) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.cyanAccent.withOpacity(0.4)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("ÙˆØ§Ù„ÛŒÙ¹ Ø¨ÛŒÙ„Ù†Ø³ (Wallet Balance)",
+                  style: TextStyle(color: Colors.white70, fontSize: 12)),
+              const SizedBox(height: 4),
+              Text("Rs. ${walletBalance.toStringAsFixed(0)}",
+                  style: const TextStyle(
+                      color: Colors.cyanAccent,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold)),
+              Text("Ø§ÛŒÙ¾ Ú©Ù…ÛŒØ´Ù†: $commissionRate%",
+                  style: const TextStyle(color: Colors.white54, fontSize: 11)),
+            ],
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.greenAccent,
+              foregroundColor: Colors.black,
+            ),
+            onPressed: () {
+              // EasyPaisa / JazzCash Re-charge Gateway Open
+              _openWorkerWalletRechargeSheet();
+            },
+            icon: const Icon(Icons.add_card),
+            label: const Text("Ø±ÛŒÚ†Ø§Ø±Ø¬ Ú©Ø±ÛŒÚº",
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _openWorkerWalletRechargeSheet() {
+    String selectedMethod = 'EasyPaisa';
+    double selectedAmount = 1000.0;
+    final tidController = TextEditingController();
+    final phoneController = TextEditingController(text: '0345-1234567');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0B101C),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+                left: 20,
+                right: 20,
+                top: 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.cyanAccent.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.account_balance_wallet, color: Colors.cyanAccent, size: 20),
+                          ),
+                          const SizedBox(width: 10),
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Ú©Ø§Ø±ÛŒÚ¯Ø± ÙˆØ§Ù„ÛŒÙ¹ Ø±ÛŒÚ†Ø§Ø±Ø¬ Ú¯ÛŒÙ¹ ÙˆÛ’",
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                              Text(
+                                "EasyPaisa / JazzCash / Raast Gateway",
+                                style: TextStyle(fontSize: 10, color: Colors.white54),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+                        onPressed: () => Navigator.pop(ctx),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Current Balance Bar
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.04),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.cyanAccent.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Ù…ÙˆØ¬ÙˆØ¯Û Ø¨ÛŒÙ„Ù†Ø³:", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        Text(
+                          "Rs. ${_workerWalletBalance.toStringAsFixed(0)}",
+                          style: const TextStyle(color: Colors.cyanAccent, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Method Selection
+                  const Text("Ø§Ø¯Ø§Ø¦ÛŒÚ¯ÛŒ Ú©Ø§ Ø·Ø±ÛŒÙ‚Û Ù…Ù†ØªØ®Ø¨ Ú©Ø±ÛŒÚº:", style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: selectedMethod == 'EasyPaisa' ? Colors.greenAccent : Colors.white24,
+                            ),
+                            backgroundColor: selectedMethod == 'EasyPaisa' ? Colors.greenAccent.withOpacity(0.12) : null,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () => setSheetState(() => selectedMethod = 'EasyPaisa'),
+                          child: const Text("Ø§ÛŒØ²ÛŒ Ù¾ÛŒØ³Û", style: TextStyle(color: Colors.white, fontSize: 11)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: selectedMethod == 'JazzCash' ? Colors.redAccent : Colors.white24,
+                            ),
+                            backgroundColor: selectedMethod == 'JazzCash' ? Colors.redAccent.withOpacity(0.12) : null,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () => setSheetState(() => selectedMethod = 'JazzCash'),
+                          child: const Text("Ø¬Ø§Ø² Ú©ÛŒØ´", style: TextStyle(color: Colors.white, fontSize: 11)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: selectedMethod == 'Raast' ? Colors.amberAccent : Colors.white24,
+                            ),
+                            backgroundColor: selectedMethod == 'Raast' ? Colors.amberAccent.withOpacity(0.12) : null,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () => setSheetState(() => selectedMethod = 'Raast'),
+                          child: const Text("Ø±Ø§Ø³Øª ID", style: TextStyle(color: Colors.white, fontSize: 11)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Quick Amount Chips
+                  const Text("Ø±Ù‚Ù… Ù…Ù†ØªØ®Ø¨ Ú©Ø±ÛŒÚº (PKR):", style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [500.0, 1000.0, 2000.0, 5000.0].map((amt) {
+                      final isSel = selectedAmount == amt;
+                      return ChoiceChip(
+                        label: Text("Rs. ${amt.toInt()}"),
+                        selected: isSel,
+                        selectedColor: Colors.greenAccent,
+                        backgroundColor: Colors.white.withOpacity(0.08),
+                        labelStyle: TextStyle(
+                          color: isSel ? Colors.black : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                        onSelected: (val) {
+                          if (val) setSheetState(() => selectedAmount = amt);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 10),
+
+                  TextField(
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: "Ø¢Ù¾ Ú©Ø§ Ù…ÙˆØ¨Ø§Ø¦Ù„ Ø§Ú©Ø§Ø¤Ù†Ù¹ Ù†Ù…Ø¨Ø±",
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      isDense: true,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  TextField(
+                    controller: tidController,
+                    decoration: InputDecoration(
+                      labelText: "Ù¹Ø±Ø§Ù†Ø²ÛŒÚ©Ø´Ù† Ø´Ù†Ø§Ø®ØªÛŒ Ú©ÙˆÚˆ (TID / SMS Code)",
+                      hintText: "Ù…Ø«Ù„Ø§Ù‹: 4982194820",
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      isDense: true,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.greenAccent,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () {
+                        final added = selectedAmount;
+                        setState(() {
+                          _workerWalletBalance += added;
+                        });
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Rs. ${added.toInt()} Ú©Ø§Ù…ÛŒØ§Ø¨ÛŒ Ø³Û’ ÙˆØ§Ù„ÛŒÙ¹ Ù…ÛŒÚº Ø¬Ù…Ø¹ ÛÙˆ Ú¯Ø¦Û’ ÛÛŒÚº!"),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.check_circle_outline_rounded),
+                      label: Text(
+                        "Rs. ${selectedAmount.toInt()} ÙÙˆØ±ÛŒ Ø±ÛŒÚ†Ø§Ø±Ø¬ Ú©Ø±ÛŒÚº",
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    _expController.dispose();
+    _rateController.dispose();
+    _cityController.dispose();
+    _areaController.dispose();
+    _bioController.dispose();
+    super.dispose();
+  }
+
+  List<WorkerProfile> get _matchingWorkers {
+    return widget.workers
+        .where((w) => w.serviceId == widget.service.id || w.serviceId == 'all')
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "${widget.service.titleUrdu} (${widget.service.titleEng})",
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        backgroundColor: widget.service.accentColor.withOpacity(0.18),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: widget.service.accentColor,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white60,
+          tabs: const [
+            Tab(icon: Icon(Icons.person_search_rounded), text: "Ú©Ø§Ø±ÛŒÚ¯Ø± Ø·Ù„Ø¨ Ú©Ø±ÛŒÚº / Book"),
+            Tab(icon: Icon(Icons.create_new_folder_rounded), text: "Ø§Ù¾Ù†Ø§ Ù¾ÛŒØ¬ Ø¨Ù†Ø§Ø¦ÛŒÚº / Create Page"),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // Tab 1: Customer View (Hire Pro Worker)
+          _buildCustomerBookingTab(),
+
+          // Tab 2: Worker View (Page Creator & Media Upload)
+          _buildWorkerPageCreatorTab(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCustomerBookingTab() {
+    final list = _matchingWorkers;
+    return ListView(
+      padding: const EdgeInsets.all(16.0),
+      children: [
+        // Service Hero Banner
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.04),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: widget.service.accentColor.withOpacity(0.3)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: widget.service.accentColor.withOpacity(0.2),
+                ),
+                child: Icon(widget.service.icon, size: 32, color: widget.service.accentColor),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "ÙÙˆØ±ÛŒ ${widget.service.titleUrdu} Ø·Ù„Ø¨ Ú©Ø±ÛŒÚº",
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      widget.service.descriptionUrdu,
+                      style: const TextStyle(fontSize: 11, color: Colors.white60),
+                    )
+                  ],
+                ),
+              )
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 18),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Ø¯Ø³ØªÛŒØ§Ø¨ ØªØµØ¯ÛŒÙ‚ Ø´Ø¯Û Ù…Ø§ÛØ±ÛŒÙ† (Verified Pros):",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white70),
+            ),
+            Text(
+              "${list.length} Online",
+              style: TextStyle(fontSize: 11, color: widget.service.accentColor, fontWeight: FontWeight.bold),
+            )
+          ],
+        ),
+
+        const SizedBox(height: 10),
+
+        if (list.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 40.0),
+            child: Center(
+              child: Text("Ø§Ø³ Ø´Ø¹Ø¨Û’ Ù…ÛŒÚº Ø¬Ù„Ø¯ Ú©Ø§Ø±ÛŒÚ¯Ø± Ø´Ø§Ù…Ù„ ÛÙˆ Ø±ÛÛ’ ÛÛŒÚºÛ”", style: TextStyle(color: Colors.white54)),
+            ),
+          )
+        else
+          ...list.map((worker) => _buildWorkerCard(worker)),
+      ],
