@@ -1,0 +1,50 @@
+
+
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: |
+          if [ -d "hms-flutter-project" ]; then
+            cd hms-flutter-project
+          elif [ -f "hms-flutter-project.zip" ]; then
+            unzip hms-flutter-project.zip
+            cd hms-flutter-project
+          fi
+          flutter pub get
+
+      - name: Build APK
+        run: |
+          if [ -d "hms-flutter-project" ]; then
+            cd hms-flutter-project
+          elif [ -d "Hms" ]; then
+            cd Hms
+          fi
+          flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: |
+            **/build/app/outputs/flutter-apk/app-release.apk
